@@ -2,12 +2,22 @@
 using System.Collections;
 using DarkRift;
 
-namespace Lockstep
+namespace Lockstep.DarkRift
 {
     public class DarkRiftNetworkHelper : NetworkHelper
     {
+        public DarkRiftServerWrapper ServerWrapper {get; private set;}
+        int port = 4296;
+
         public DarkRiftNetworkHelper () {
+            DarkRiftAPI.onData += DarkRiftAPI_onData;
             DarkRiftAPI.onDataDetailed += DarkRiftAPI_onDataDetailed;
+            ServerWrapper = new DarkRiftServerWrapper();
+        }
+
+        void DarkRiftAPI_onData (byte tag, ushort subject, object data)
+        {
+            Debug.Log ("a");
         }
 
         void DarkRiftAPI_onDataDetailed (ushort sender, byte tag, ushort subject, object data)
@@ -24,7 +34,20 @@ namespace Lockstep
 
         public override void Disconnect()
         {
+            if (this._isServer)
+            {
+                ServerWrapper.OnApplicationQuit();
+                this._isServer = false;
+            }
+
             DarkRiftAPI.Disconnect();
+
+
+        }
+
+        public override void Simulate()
+        {
+            ServerWrapper.FixedUpdate();
         }
 
         public override ushort ID
@@ -36,7 +59,10 @@ namespace Lockstep
         }
         public override void Host(int roomSize)
         {
-            Debug.Log ("DarkRift integration does not support client-hosted servers yet.");
+            ServerWrapper.Awake();
+            this._isServer = true;
+
+            this.Connect("127.0.0.1");
         }
 
         public override bool IsConnected
@@ -47,11 +73,13 @@ namespace Lockstep
             }
         }
 
+        private bool _isServer;
+
         public override bool IsServer
         {
             get
             {
-                return false;
+                return _isServer;
             }
         }
         public override int PlayerCount
@@ -66,11 +94,16 @@ namespace Lockstep
         {
             //Implemented for possible client-hosted server in the future
             DarkRiftAPI.SendMessageToAll ((byte)messageType,0,data);
+            if (this.IsServer)
+                this.Receive(messageType, data);
         }
 
         public override void SendMessageToServer(MessageType messageType, byte[] data)
         {
-            DarkRiftAPI.SendMessageToServer((byte)messageType,0,data);
+            if (this.IsServer)
+                this.Receive(messageType, data);
+            else
+                DarkRiftAPI.SendMessageToServer((byte)messageType,0,data);
         }
 
     }
