@@ -50,11 +50,11 @@ namespace Lockstep.DarkRift
             ServerWrapper.FixedUpdate();
         }
 
-        public override ushort ID
+        public override int ID
         {
             get
             {
-                return DarkRiftAPI.id;
+                return (int)DarkRiftAPI.id;
             }
         }
         public override void Host(int roomSize)
