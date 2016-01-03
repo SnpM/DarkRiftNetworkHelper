@@ -1,26 +1,50 @@
 ﻿using UnityEngine;
 using System.Collections;
 using DarkRift;
-
-namespace Lockstep.DarkRift
+using Lockstep.NetworkHelpers.DarkRift;
+namespace Lockstep.NetworkHelpers
 {
     public class DarkRiftNetworkHelper : NetworkHelper
     {
+        public DarkRiftNetworkHelper () {
+            Awake ();
+        }
+       
+        void Awake () {
+            DarkRiftAPI.onData += HandleData;
+            ServerWrapper = new DarkRiftServerWrapper();
+            ConnectionService.onPlayerConnect += ConnectionService_onPlayerConnect;
+            ConnectionService.onPlayerDisconnect += ConnectionService_onPlayerDisconnect;
+            ConnectionService.onServerMessage += this.HandleServerData;
+        }
+        void HandleServerData (ConnectionService service, NetworkMessage message) {
+            Debug.Log("Received"); //Never logged on server
+            this.HandleData(message.tag,message.subject,message.data);
+        }
+
+        protected override void OnSendMessageToServer(MessageType messageType, byte[] data)
+        {
+            Debug.Log("Sent"); //Logged from client
+            DarkRiftAPI.SendMessageToServer((byte)messageType,0,data);
+        }
+
+
+        void ConnectionService_onPlayerDisconnect (ConnectionService con)
+        {
+            this.Connections.Add(con);
+        }
+
+        void ConnectionService_onPlayerConnect (ConnectionService con)
+        {
+            Connections.Add(con);
+        }
         public DarkRiftServerWrapper ServerWrapper {get; private set;}
         int port = 4296;
 
-        public DarkRiftNetworkHelper () {
-            DarkRiftAPI.onData += DarkRiftAPI_onData;
-            DarkRiftAPI.onDataDetailed += DarkRiftAPI_onDataDetailed;
-            ServerWrapper = new DarkRiftServerWrapper();
-        }
+        FastList<ConnectionService> Connections = new FastList<ConnectionService>();
 
-        void DarkRiftAPI_onData (byte tag, ushort subject, object data)
-        {
-            Debug.Log ("a");
-        }
 
-        void DarkRiftAPI_onDataDetailed (ushort sender, byte tag, ushort subject, object data)
+        void HandleData (byte tag, ushort subject, object data)
         {
             byte[] byteData = data as byte[];
             if (byteData != null) {
@@ -39,9 +63,9 @@ namespace Lockstep.DarkRift
                 ServerWrapper.OnApplicationQuit();
                 this._isServer = false;
             }
-
+            else {
             DarkRiftAPI.Disconnect();
-
+            }
 
         }
 
@@ -62,14 +86,13 @@ namespace Lockstep.DarkRift
             ServerWrapper.Awake();
             this._isServer = true;
 
-            this.Connect("127.0.0.1");
         }
 
         public override bool IsConnected
         {
             get
             {
-                return DarkRiftAPI.isConnected;
+                return this.IsServer || DarkRiftAPI.isConnected;
             }
         }
 
@@ -90,21 +113,14 @@ namespace Lockstep.DarkRift
             }
         }
 
-        public override void SendMessageToAll(MessageType messageType, byte[] data)
+        protected override void OnSendMessageToAll(MessageType messageType, byte[] data)
         {
-            //Implemented for possible client-hosted server in the future
-            DarkRiftAPI.SendMessageToAll ((byte)messageType,0,data);
-            if (this.IsServer)
-                this.Receive(messageType, data);
+            for (int i = 0; i < Connections.Count; i++) {
+                Connections[i].SendReply((byte)messageType,0,data);
+            }
+            this.Receive(messageType, data);
         }
 
-        public override void SendMessageToServer(MessageType messageType, byte[] data)
-        {
-            if (this.IsServer)
-                this.Receive(messageType, data);
-            else
-                DarkRiftAPI.SendMessageToServer((byte)messageType,0,data);
-        }
 
     }
 }

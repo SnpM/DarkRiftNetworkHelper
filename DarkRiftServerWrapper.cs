@@ -6,7 +6,7 @@ using System.Collections.Generic;
 using DarkRift;
 using System;
 
-namespace Lockstep.DarkRift
+namespace Lockstep.NetworkHelpers.DarkRift
 {
     /*
  * This file is designed to launch a DarkRift server from Unity during the Awake() function. 
