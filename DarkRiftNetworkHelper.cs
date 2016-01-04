@@ -18,15 +18,9 @@ namespace Lockstep.NetworkHelpers
             ConnectionService.onServerMessage += this.HandleServerData;
         }
         void HandleServerData (ConnectionService service, NetworkMessage message) {
-            Debug.Log("Received"); //Never logged on server
             this.HandleData(message.tag,message.subject,message.data);
         }
 
-        protected override void OnSendMessageToServer(MessageType messageType, byte[] data)
-        {
-            Debug.Log("Sent"); //Logged from client
-            DarkRiftAPI.SendMessageToServer((byte)messageType,0,data);
-        }
 
 
         void ConnectionService_onPlayerDisconnect (ConnectionService con)
@@ -111,6 +105,10 @@ namespace Lockstep.NetworkHelpers
             {
                 return 0;
             }
+        }
+        protected override void OnSendMessageToServer(MessageType messageType, byte[] data)
+        {
+            DarkRiftAPI.SendMessageToServer((byte)messageType,0,data);
         }
 
         protected override void OnSendMessageToAll(MessageType messageType, byte[] data)
