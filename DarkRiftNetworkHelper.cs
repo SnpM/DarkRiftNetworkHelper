@@ -6,14 +6,10 @@ namespace Lockstep.NetworkHelpers
 {
 	public class DarkRiftNetworkHelper : NetworkHelper
 	{
-
-		void Start()
+		DarkRiftConnection Connection = new DarkRiftConnection ();
+		void Start() 
 		{
-
 		}
-
-
-
 
 		int port = 4296;
 
@@ -28,7 +24,7 @@ namespace Lockstep.NetworkHelpers
 		}
 		public override void Connect (string ip)
 		{
-			DarkRiftAPI.Connect (ip);
+			Connection.Connect (ip);
 
 		}
 
@@ -37,7 +33,7 @@ namespace Lockstep.NetworkHelpers
 			if (this._isServer) {
 				this._isServer = false;
 			} else {
-				DarkRiftAPI.Disconnect ();
+				Connection.Disconnect ();
 			}
 
 		}
@@ -49,10 +45,11 @@ namespace Lockstep.NetworkHelpers
 			if (this.IsConnected) {
 				if (first) {
 					Debug.Log ("first");
-					DarkRiftAPI.connection.onData += (tag, subject, data) => Debug.Log("RECEIVED");;
 					first = false;
+					Connection.onData += (tag, subject, data) => Debug.Log ("RECEIVED"); ;
+
 				}
-				DarkRiftAPI.SendMessageToAll (1, 2, 3);
+				Connection.SendMessageToAll (1, 2, 3);
 
 			}
 			
@@ -71,7 +68,7 @@ namespace Lockstep.NetworkHelpers
 
 		public override bool IsConnected {
 			get {
-				return this.IsServer || DarkRiftAPI.isConnected;
+				return this.IsServer || Connection.isConnected;
 			}
 		}
 
@@ -89,7 +86,7 @@ namespace Lockstep.NetworkHelpers
 		}
 		protected override void OnSendMessageToServer (MessageType messageType, byte [] data)
 		{
-			DarkRiftAPI.SendMessageToServer ((byte)messageType, 0, data);
+			Connection.SendMessageToServer ((byte)messageType, 0, data);
 		}
 
 		protected override void OnSendMessageToAll (MessageType messageType, byte [] data)
