@@ -9,6 +9,7 @@ namespace Lockstep.NetworkHelpers
 		DarkRiftConnection Connection = new DarkRiftConnection ();
 		void Start() 
 		{
+			Connection.onData += HandleData;
 		}
 
 		int port = 4296;
@@ -16,7 +17,6 @@ namespace Lockstep.NetworkHelpers
 
 		void HandleData (byte tag, ushort subject, object data)
 		{
-			Debug.Log ("received" + ", " + data.ToString());
 			byte [] byteData = data as byte [];
 			if (byteData != null) {
 				base.Receive ((MessageType)tag, byteData);
@@ -39,17 +39,18 @@ namespace Lockstep.NetworkHelpers
 		}
 
 		bool first = true;
+		void Update ()
+		{
+			Connection.Receive ();
+		}
 		public override void Simulate ()
 		{
 
 			if (this.IsConnected) {
 				if (first) {
-					Debug.Log ("first");
 					first = false;
-					Connection.onData += (tag, subject, data) => Debug.Log ("RECEIVED"); ;
 
 				}
-				Connection.SendMessageToAll (1, 2, 3);
 
 			}
 			
@@ -57,7 +58,7 @@ namespace Lockstep.NetworkHelpers
 
 		public override int ID {
 			get {
-				return (int)DarkRiftAPI.id;
+				return (int)Connection.id;
 			}
 		}
 		public override void Host (int roomSize)
