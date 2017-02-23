@@ -21,7 +21,6 @@ namespace Lockstep.NetworkHelpers
 			byte [] byteData = data as byte [];
 
 			if (byteData != null) {
-				Debug.Log ("com source: " + byteData.PrintAll ());
 
 				base.Receive ((MessageType)tag, byteData);
 			}
