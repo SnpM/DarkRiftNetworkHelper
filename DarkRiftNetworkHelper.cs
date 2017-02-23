@@ -17,8 +17,12 @@ namespace Lockstep.NetworkHelpers
 
 		void HandleData (byte tag, ushort subject, object data)
 		{
+
 			byte [] byteData = data as byte [];
+
 			if (byteData != null) {
+				Debug.Log ("com source: " + byteData.PrintAll ());
+
 				base.Receive ((MessageType)tag, byteData);
 			}
 		}
